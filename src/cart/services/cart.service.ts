@@ -1,13 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 import { v4 } from 'uuid';
 
 import { Cart } from '../models';
+import { Cart as CartEntity } from '../../typeorm';
 
 @Injectable()
 export class CartService {
-  private userCarts: Record<string, Cart> = {};
-
+  constructor(
+      @InjectRepository(CartEntity) private readonly userCarts: Repository<CartEntity>,
+  ) {}
+  
   findByUserId(userId: string): Cart {
     return this.userCarts[ userId ];
   }
