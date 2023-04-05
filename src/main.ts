@@ -22,6 +22,7 @@ async function bootstrap(): Promise<Handler> {
   setupSwagger(app);
   await app.init();
   app.use(helmet());
+  await app.listen(4000)
   const expressApp = app.getHttpAdapter().getInstance();
   return serverlessExpress({ app: expressApp });
 }
@@ -34,3 +35,5 @@ export const handler: Handler = async (
   server = server ?? (await bootstrap());
   return server(event, context, callback);
 };
+
+bootstrap();
