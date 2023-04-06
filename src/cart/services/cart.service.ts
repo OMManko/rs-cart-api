@@ -2,59 +2,58 @@ import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { v4 } from 'uuid';
-
-import { Cart } from '../models';
-import { Cart as CartEntity } from '../../typeorm';
+import { Cart, CartItem } from '../../typeorm';
 
 @Injectable()
 export class CartService {
   constructor(
-      @InjectRepository(CartEntity) private readonly userCarts: Repository<CartEntity>,
+      @InjectRepository(Cart) private readonly userCarts: Repository<Cart>,
+      @InjectRepository(CartItem) private readonly cartItems: Repository<CartItem>,
   ) {}
   
-  findByUserId(userId: string): Cart {
-    return this.userCarts[ userId ];
+  async findByUserId(userId: string): Promise<Cart> {
+    return this.userCarts.createQueryBuilder('cart')
+        .leftJoinAndSelect('cart.user', 'user')
+        .leftJoinAndSelect('cart.items', 'item')
+        .select(['cart', 'user.id', 'user.name', 'user.email', 'item'])
+        .where('cart.user_id = :userId', { userId })
+        .getOne();
   }
-
-  createByUserId(userId: string) {
-    const id = v4(v4());
-    const userCart = {
-      id,
-      items: [],
-    };
-
-    this.userCarts[ userId ] = userCart;
-
-    return userCart;
+  
+  async createByUserId(userId: string): Promise<Cart> {
+    const cart = new Cart({
+      user_id: userId,
+      created_at: new Date(),
+      updated_at: new Date(),
+      status: 'OPEN',
+    });
+    return this.userCarts.save(cart);
   }
-
-  findOrCreateByUserId(userId: string): Cart {
-    const userCart = this.findByUserId(userId);
-
-    if (userCart) {
-      return userCart;
+  
+  async findOrCreateByUserId(userId: string): Promise<Cart> {
+    const cart = this.findByUserId(userId);
+    
+    if (cart) {
+      return cart;
     }
-
+    
     return this.createByUserId(userId);
   }
-
-  updateByUserId(userId: string, { items }: Cart): Cart {
-    const { id, ...rest } = this.findOrCreateByUserId(userId);
-
-    const updatedCart = {
-      id,
-      ...rest,
-      items: [ ...items ],
-    }
-
-    this.userCarts[ userId ] = { ...updatedCart };
-
-    return { ...updatedCart };
+  
+  async updateByUserId(userId: string, updateCartDto: Partial<Cart>) {
+    return this.userCarts.createQueryBuilder()
+        .update(Cart)
+        .set(updateCartDto)
+        .where("user_id = :userId", { userId })
+        .execute()
   }
-
-  removeByUserId(userId): void {
-    this.userCarts[ userId ] = null;
+  
+  async removeByUserId(userId: string) {
+    return this.userCarts
+        .createQueryBuilder()
+        .delete()
+        .from(Cart)
+        .where('user_id = :userId', { userId })
+        .execute();
   }
-
 }

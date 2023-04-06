@@ -4,12 +4,21 @@ import { User } from './user.entity';
 
 @Entity('carts')
 export class Cart {
+	constructor(initialData: Partial<Cart> = null) {
+		if (initialData !== null) {
+			Object.assign(this, initialData);
+		}
+	}
+	
 	@PrimaryGeneratedColumn('uuid')
 	id: string;
 	
-	@OneToOne(() => User, (user) => user.id)
-	@JoinColumn({ name: 'user_id' })
-	user: User
+	@OneToOne(() => User)
+	@Column({
+		type: 'uuid',
+		nullable: false
+	})
+	user_id: string;
 	
 	@Column({
 		type: 'timestamptz',
@@ -30,6 +39,11 @@ export class Cart {
 	})
 	status: string;
 	
-	@OneToMany(() => CartItem, (cartItem) => cartItem.cart)
-	cart_items: CartItem[]
+	@OneToOne(() => User)
+	@JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
+	user: User
+	
+	@OneToMany(() => CartItem, (cartItem) => cartItem.cart, { onDelete: 'CASCADE' })
+	@JoinColumn({ name: 'id', referencedColumnName: 'cart_id' })
+	items: CartItem[]
 }

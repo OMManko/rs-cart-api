@@ -4,9 +4,12 @@ import { Cart } from './cart.entity';
 @Entity('cart_items')
 export class CartItem {
 	@PrimaryGeneratedColumn('uuid')
-	product_id: string;
+	id: string;
 	
-	@ManyToOne(() => Cart, (cart) => cart.cart_items)
+	@Column({ type: 'uuid', nullable: false })
+	cart_id: string;
+	
+	@ManyToOne(() => Cart, { onDelete: 'CASCADE' })
 	@JoinColumn({ name: 'cart_id' })
 	cart: Cart;
 	
