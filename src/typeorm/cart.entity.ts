@@ -13,12 +13,6 @@ export class Cart {
 	@PrimaryGeneratedColumn('uuid')
 	id: string;
 	
-	@Column({
-		type: 'uuid',
-		nullable: false
-	})
-	product_id: string;
-	
 	@OneToOne(() => User)
 	@Column({
 		type: 'uuid',

@@ -8,7 +8,6 @@ import { Cart, CartItem } from '../../typeorm';
 export class CartService {
   constructor(
       @InjectRepository(Cart) private readonly userCarts: Repository<Cart>,
-      @InjectRepository(CartItem) private readonly cartItems: Repository<CartItem>,
   ) {}
   
   async findByUserId(userId: string): Promise<Cart> {
